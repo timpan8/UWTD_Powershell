@@ -1,3 +1,7 @@
+$global:FilePath = "C:\luwtd\UWTD_20190519"                                                   #Skriv sökvägen till uwtd-mappen
+Invoke-Command programs  
+
+
 <# This form was created using POSHGUI.com  a free online gui designer for PowerShell
 .NAME
     Untitled
@@ -93,17 +97,139 @@ $Label4.height                   = 10
 $Label4.location                 = New-Object System.Drawing.Point(241,92)
 $Label4.Font                     = 'Microsoft Sans Serif,10'
 
-$Form.controls.AddRange(@($TextBox_URL,$Button1,$CheckBox1,$TextBox_Name,$Label1,$Label2,$TextBox_StartEpi,$TextBox_StopEpi,$Label3,$Label4))
+$Button_settings                 = New-Object system.Windows.Forms.Button
+$Button_settings.text            = "Settings"
+$Button_settings.width           = 65
+$Button_settings.height          = 20
+$Button_settings.location        = New-Object System.Drawing.Point(250,240)
+$Button_settings.Font            = 'Microsoft Sans Serif,10'
+
+$Form.controls.AddRange(@($TextBox_URL,$Button1,$CheckBox1,$TextBox_Name,$Label1,$Label2,$TextBox_StartEpi,$TextBox_StopEpi,$Label3,$Label4,$Button_settings))
+
 
 $Button1.Add_Click({invoke-expression ViafreeCheck})
+$Button_settings.Add_Click({invoke-expression settings})
+
+
+
+
+function Settings {
+
+
+<# This form was created using POSHGUI.com  a free online gui designer for PowerShell
+.NAME
+    Untitled
+#>
+
+Add-Type -AssemblyName System.Windows.Forms
+[System.Windows.Forms.Application]::EnableVisualStyles()
+
+$Form                            = New-Object system.Windows.Forms.Form
+$Form.ClientSize                 = '456,170'
+$Form.text                       = "Form"
+$Form.TopMost                    = $false
+
+$Label_Path                      = New-Object system.Windows.Forms.Label
+$Label_Path.text                 = "$global:FilePath"
+$Label_Path.AutoSize             = $true
+$Label_Path.width                = 25
+$Label_Path.height               = 10
+$Label_Path.location             = New-Object System.Drawing.Point(91,24)
+$Label_Path.Font                 = 'Microsoft Sans Serif,10'
+
+$Button_ProgramPathChange        = New-Object system.Windows.Forms.Button
+$Button_ProgramPathChange.text   = "Change"
+$Button_ProgramPathChange.width  = 80
+$Button_ProgramPathChange.height  = 30
+$Button_ProgramPathChange.location  = New-Object System.Drawing.Point(9,15)
+$Button_ProgramPathChange.Font   = 'Microsoft Sans Serif,10'
+
+$Label_DownloadLocation          = New-Object system.Windows.Forms.Label
+$Label_DownloadLocation.text     = "$global:DownloadPath"
+$Label_DownloadLocation.AutoSize  = $true
+$Label_DownloadLocation.width    = 25
+$Label_DownloadLocation.height   = 10
+$Label_DownloadLocation.location  = New-Object System.Drawing.Point(91,82)
+$Label_DownloadLocation.Font     = 'Microsoft Sans Serif,10'
+
+$Button_DownloadLocation         = New-Object system.Windows.Forms.Button
+$Button_DownloadLocation.text    = "Change"
+$Button_DownloadLocation.width   = 80
+$Button_DownloadLocation.height  = 30
+$Button_DownloadLocation.location  = New-Object System.Drawing.Point(9,72)
+$Button_DownloadLocation.Font    = 'Microsoft Sans Serif,10'
+
+$Button_CloseSettings            = New-Object system.Windows.Forms.Button
+$Button_CloseSettings.text       = "Close"
+$Button_CloseSettings.width      = 80
+$Button_CloseSettings.height     = 30
+$Button_CloseSettings.location   = New-Object System.Drawing.Point(165,127)
+$Button_CloseSettings.Font       = 'Microsoft Sans Serif,10'
+
+$Form.controls.AddRange(@($Label_Path,$Button_ProgramPathChange,$Label_DownloadLocation,$Button_DownloadLocation,$Button_CloseSettings))
+
+
+$Button_CloseSettings.Add_Click({$form.Close()})
+$Button_DownloadLocation.Add_Click({$global:DownloadPath = FolderPath; Set-Content $DownloadPathFile -Value $global:DownloadPath; $form.Close()})
+$Button_ProgramPathChange.Add_Click({$global:FilePath = FolderPath; $form.Close();})
+
+
+
+
+
+[void]$Form.ShowDialog()
+
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 
 #Write your logic code here
-function ViafreeCheck {
+Function FolderPath {
 
+    param([string]$Description="Select Folder",[string]$RootFolder="Desktop")
+
+ [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") |
+     Out-Null     
+
+   $objForm = New-Object System.Windows.Forms.FolderBrowserDialog
+        $objForm.Rootfolder = $RootFolder
+        $objForm.Description = $Description
+        $Show = $objForm.ShowDialog()
+        If ($Show -eq "OK")
+        {
+            Return $objForm.SelectedPath
+            
+        }
+        Else
+        {
+            Write-Error "Operation cancelled by user."
+            
+        }
+    }
+
+
+    
+
+
+
+Function DownloadLocation {}
+
+
+
+function ViafreeCheck {
+Invoke-Command programs 
 $problem = $false
 
 
@@ -141,23 +267,7 @@ function ViafreeDownload {
 
 
 
-
-$FilePath = "C:\uwtd\UWTD_20190519"                                                   #Skriv sökvägen till uwtd-mappen
-$viafree = "viafree.exe"                                                               #Behöver bara ändras om programet skulle få nytt namn i nyare versioner
-                                  
-$url = $TextBox_URL.Text            #Klistra in sökvägen till programet som ska laddas ned och ta bort avsnittsnummret
-$name = $TextBox_Name.Text                                                                     #Välj namnet filerna kommer döpas till
-                                                                       # a = video&subtitles, v = video, s = subtitles
-
-$EpisodesFrom = $TextBox_StartEpi.Text                                                                    #välj från vilket avsnitt det ska laddas ned 
-$Episodes = $TextBox_StopEpi.Text                                                                       #välj antal avsnitt som ska laddas ned
-
-
-
-
-
-
-ForEach ($number in $EpisodesFrom..$Episodes ) { 
+ForEach ($number in $TextBox_StartEpi.Text..$TextBox_StopEpi.Text ) { 
 try {
   $MyProcess = New-Object System.Diagnostics.Process
   
@@ -168,12 +278,12 @@ try {
   $MyProcess.Start()
   $StdIn = $MyProcess.StandardInput
   
-  $StdIn.WriteLine("cd $FilePath")
+  $StdIn.WriteLine("cd $global:FilePath")
    $StdIn.WriteLine("$viafree")
-   $StdIn.WriteLine("$url"+"$number")
-   $StdIn.WriteLine("$name"+" $number")
+   $StdIn.WriteLine("$TextBox_URL.Text"+"$number")
+   $StdIn.WriteLine("$TextBox_Name.Text"+" $number")
    $StdIn.WriteLine("$subtitles")
-   
+   pause
 
 
 } finally {
@@ -185,7 +295,15 @@ try {
 }
 
 
+function programs {
+$DownloadPathFile = $programs | Select-String -InputObject {$_.FullName} -Pattern nedladdningsmapp.txt
+$DownloadPath = Get-Content $DownloadPathFile
 
+
+$Programs = Get-ChildItem $FilePath -Recurse | Select-Object FullName
+$viafree = $programs | Select-String -InputObject {$_.FullName} -Pattern viafree.exe
+$svtplayDL = $programs | Select-String -InputObject {$_.FullName} -Pattern svtplay-dl.exe  
+}
 
 
 
