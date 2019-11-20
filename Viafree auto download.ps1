@@ -1,19 +1,73 @@
-﻿$FilePath = "C:\uwtd\"                                                   #Skriv sökvägen till uwtd-mappen
-$viafree = "viafree.exe"                                                               #Behöver bara ändras om programet skulle få nytt namn i nyare versioner
-                                  
-$url = "https://www.viafree.se/program/reality/pappaliv/sasong-1/avsnitt-"             #Klistra in sökvägen till programet som ska laddas ned och ta bort avsnittsnummret
-$name = "Pappaliv"                                                                      #Välj namnet filerna kommer döpas till
-$subtitles = "a"                                                                       # a = video&subtitles, v = video, s = subtitles
+$list = "c:\temp\lista.txt"
 
-$EpisodesFrom = "1"                                                                    #välj från vilket avsnitt det ska laddas ned 
-$Episodes = "20"                                                                        #välj antal avsnitt som ska laddas ned
+
+$serier = get-content $list
+$date = get-date
 
 
 
+foreach($avsnitt in $serier)
+    {
+
+[int]$Episode = [regex]::Matches($avsnitt, '{([^/)]+)}')  | ForEach-Object { $_.Groups[1].Value }
+[int]$TotalEpisodes = [regex]::Matches($avsnitt, '\[([^]+\.]+)]') | ForEach-Object { $_.Groups[1].Value }
+
+
+$NextEpisode = $Episode+1
+$countdown = $TotalEpisodes-1
+
+
+    if($avsnitt.StartsWith(1)){$day = "Monday"}
+    if($avsnitt.StartsWith(2)){$day = "Tuesday"}
+    if($avsnitt.StartsWith(3)){$day = "Wednesday"}
+    if($avsnitt.StartsWith(4)){$day = "Thursday"}
+    if($avsnitt.StartsWith(5)){$day = "Friday"}
+    if($avsnitt.StartsWith(6)){$day = "Saturday"}
+    if($avsnitt.StartsWith(7)){$day = "Sunday"}
+    if($avsnitt.StartsWith(8)){$day = $date.DayOfWeek;}
+
+    if(($date.DayOfWeek -eq $day) -and ($TotalEpisodes -gt "0")){
+
+    echo $day
+
+    if($avsnitt -match '\**') {$serier.Replace('**', $Episode)}
+    if($avsnitt -like "*viaplay*"){ Invoke-Expression "viaplay"}
+    if($avsnitt -like "*dplay*"){ Invoke-Expression "dplay"}
+    
+    }
+                                }
+
+
+    function viaplay{echo "viaplay"}
+
+
+    function dplay{echo "dplay"; Invoke-Expression loop}
 
 
 
-ForEach ($number in $EpisodesFrom..$Episodes ) { 
+
+    
+    
+
+     
+
+                  
+
+
+
+
+function loop {
+                $CountDownLoop =  $avsnitt -replace  ('\[([^]+\.]+)]'), "[$countdown]";
+                $UpdatedAvsnitt = $CountDownLoop -replace ('{([^/)]+)}'), "{$Nextepisode}"; 
+                $serier.Replace($avsnitt, $UpdatedAvsnitt) | Out-File $list;}
+
+
+
+
+    Function download {
+                        
+
+                       ForEach ($number in $EpisodesFrom..$Episodes ) { 
 try {
   $MyProcess = New-Object System.Diagnostics.Process
   
@@ -38,3 +92,5 @@ try {
   }
 }
 }
+
+                        }
